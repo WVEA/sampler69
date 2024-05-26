@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revolutionary Sample Pad</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .pad {
+            width: 120px;
+            height: 120px;
+            margin: 15px;
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            line-height: 120px;
+            cursor: pointer;
+            user-select: none;
+            border-radius: 10px;
+            transition: transform 0.1s, background-color 0.1s;
+        }
+
+        .pad:hover {
+            background-color: #45a049;
+        }
+
+        .pad:active {
+            background-color: #3e8e41;
+            transform: scale(0.95);
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        .controls input {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="pad1" class="pad">Pad 1</div>
+        <div id="pad2" class="pad">Pad 2</div>
+        <div id="pad3" class="pad">Pad 3</div>
+        <div id="pad4" class="pad">Pad 4</div>
+        <div class="controls">
+            <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5">
+            <label for="volume">Volume</label>
+        </div>
+    </div>
+
+    <script>
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const sampleUrls = [
+            'https://www.soundjay.com/button/beep-07.wav',
+            'https://www.soundjay.com/button/beep-08.wav',
+            'https://www.soundjay.com/button/beep-09.wav',
+            'https://www.soundjay.com/button/beep-10.wav'
+        ];
+        const buffers = [];
+        const gainNode = audioContext.createGain();
+        gainNode.connect(audioContext.destination);
+
+        function loadSample(url, index) {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.arrayBuffer();
+                })
+                .then(data => audioContext.decodeAudioData(data))
+                .then(buffer => {
+                    buffers[index] = buffer;
+                    console.log(`Loaded sample ${index + 1}`);
+                })
+                .catch(e => console.error("Error loading sample", e));
+        }
+
+        sampleUrls.forEach((url, index) => loadSample(url, index));
+
+        function playSample(buffer) {
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(gainNode);
+            source.start(0);
+        }
+
+        document.getElementById('pad1').addEventListener('click', () => {
+            if (buffers[0]) playSample(buffers[0]);
+        });
+        document.getElementById('pad2').addEventListener('click', () => {
+            if (buffers[1]) playSample(buffers[1]);
+        });
+        document.getElementById('pad3').addEventListener('click', () => {
+            if (buffers[2]) playSample(buffers[2]);
+        });
+        document.getElementById('pad4').addEventListener('click', () => {
+            if (buffers[3]) playSample(buffers[3]);
+        });
+
+        document.getElementById('volume').addEventListener('input', (event) => {
+            gainNode.gain.value = event.target.value;
+        });
+    </script>
+</body>
+</html>
